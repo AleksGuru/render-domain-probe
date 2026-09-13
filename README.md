@@ -19,3 +19,11 @@ to Railway; application and outgoing backend requests remain on Railway.
 DNS cutover: Railway-managed ANAME `@` targets `render-domain-probe.onrender.com`.
 Rollback: restore ANAME `@` to `eoj9a4jm.up.railway.app` (TTL 300). Preserve
 the Railway verification TXT and existing Railway domain association.
+
+Activated 2026-09-13: Render deploy `dep-dajef4e7bikc73borla0`, commit
+`a8e198d`. Railway DNS ANAME was updated as described above. Verified normal
+HTTPS GET follows one redirect to the Railway homepage with HTTP 200 and valid
+TLS; HEAD `/projects?source=domain-check` returns 302 with path/query intact.
+The root domain was Verified in Render and HTTPS issuance completed. The
+existing RF test was reported by the owner on the test subdomain; final root
+access should also be checked on the owner's RF networks without VPN.
