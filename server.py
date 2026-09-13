@@ -10,7 +10,23 @@ DIGEST = hashlib.sha256(PAYLOAD).hexdigest()
 PAGE = Path(__file__).with_name('index.html').read_bytes()
 
 class Handler(BaseHTTPRequestHandler):
+    def do_HEAD(self):
+        self.do_GET()
+
     def do_GET(self):
+        host = self.headers.get('Host', '').lower().split(':', 1)[0]
+        if host in {'disrupt-radar.app', 'render-test.disrupt-radar.app'}:
+            # Fixed destination: never trust a request-supplied host or scheme.
+            target = urlsplit(self.path)
+            location = 'https://disrupt-radar.up.railway.app/' + target.path.lstrip('/')
+            if target.query:
+                location += '?' + target.query
+            self.send_response(302)
+            self.send_header('Location', location)
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('Content-Length', '0')
+            self.end_headers()
+            return
         path = urlsplit(self.path).path
         if path == '/':
             self.respond(PAGE, 'text/html; charset=utf-8')
@@ -29,7 +45,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.end_headers()
         try:
-            self.wfile.write(body)
+            if self.command != 'HEAD':
+                self.wfile.write(body)
         except (BrokenPipeError, ConnectionResetError):
             pass
 
