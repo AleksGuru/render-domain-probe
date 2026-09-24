@@ -1,0 +1,38 @@
+{
+	admin off
+	auto_https off
+	# Operational errors must not serialize request headers or cookies.
+	log {
+		level FATAL
+	}
+}
+:{$PORT:10000} {
+	# These bounded diagnostics terminate at Render, including on the custom domain.
+	handle_path /__proxy/* {
+		root * {$DIAGNOSTIC_ROOT}
+		header Cache-Control "no-store"
+		header X-Content-Type-Options "nosniff"
+		file_server
+	}
+	@app host disrupt-radar.app
+	handle @app {
+		reverse_proxy https://disrupt-radar.up.railway.app {
+			header_up Host disrupt-radar.app
+			header_up X-Forwarded-Host disrupt-radar.app
+			header_up X-Forwarded-Proto https
+			transport http {
+				tls_server_name disrupt-radar.app
+				dial_timeout 10s
+				response_header_timeout 420s
+			}
+		}
+	}
+	@aliases host render-domain-probe.onrender.com render-test.disrupt-radar.app
+	handle @aliases {
+		header Cache-Control "no-store"
+		redir https://disrupt-radar.app{uri} 302
+	}
+	handle {
+		respond "Unknown host" 421
+	}
+}

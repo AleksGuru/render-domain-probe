@@ -1,2 +1,5 @@
+bin/
+.runtime/
 __pycache__/
+
 .env*
